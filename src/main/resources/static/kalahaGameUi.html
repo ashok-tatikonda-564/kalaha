@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .square {
+            width: 100px;
+            height: 100px;
+            text-align: center;
+            line-height: 100px;
+            border: 1px solid #000;
+            font-size: 24px;
+        }
+        .rectangle {
+            width: 100px;
+            height: 200px;
+            text-align: center;
+            line-height: 100px;
+            border: 1px solid #000;
+            font-size: 32px;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50vh;
+            margin: 0;
+        }
+
+        .centered-div {
+            height: 100px;
+        }
+
+        label {
+            font-size: 28px;
+        }
+        .info {
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="centered-div">
+    <input type="button" id="createGame" name="Create new game" value="Create new ame">
+    <br />
+    <label class="info"> Or </label>
+    <br />
+    <input type="text" id="loadGameById" name = "Load Game" value="Enter gameId and click on load game" size="40">
+    <input type="button" id="loadGame" name="load existing game" value="Load Game">
+
+<br />
+    <br />
+    <label class="info" id="gameStatus">Game Status: Not Started, click on create new game button to start new game or enter the gameId and click on loadGame to load an existing game</label>
+    <br />
+    <br />
+    <label class="info" id="turn">Turn: After game started, click on a pit to decide player turn.</label>
+    <br />
+    <br />
+    <label>Player 2</label>
+<table>
+    <!-- First Row -->
+    <tr>
+        <td><input type="text" class="rectangle" onclick="updateApi(14)" id="14" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(13)" id="13" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(12)" id="12" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(11)" id="11" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(10)" id="10"  value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(9)" id="9"  value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(8)" id="8"  value=0 readonly></td>
+
+
+    </tr>
+    <!-- Second Row -->
+    <tr>
+        <td><input type="text" class="square"    onclick="updateApi(1)" hidden readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(1)" id="1" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(2)" id="2" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(3)" id="3" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(4)" id="4" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(5)" id="5" value=0 readonly></td>
+        <td><input type="text" class="square"    onclick="updateApi(6)" id="6" value=0 readonly></td>
+        <td><input type="text" class="rectangle" onclick="updateApi(7)" id="7" value=0 readonly></td>
+
+    </tr>
+</table>
+
+    <label >Player 1</label>
+</div>
+<script>
+    var gameId = ""
+    var playerTurn = ""
+    var gameStatus = ""
+
+    document.getElementById("createGame").addEventListener("click", function() {
+
+        const apiUrl = "http://localhost:8080/v1/api/games";
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", apiUrl, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                // Request was successful
+                const response = JSON.parse(xhr.responseText);
+                console.log("API Response:", response);
+                gameId = response.gameId
+
+                document.getElementById("gameStatus").textContent = "Game Status: Game Loaded"
+                if(response.playerTurn == null)
+                    document.getElementById("turn").textContent = "Turn: To start, click on any below non larger pit for player one and any non larger top pit for player 2."
+
+                response.pits.forEach(pit =>{
+                    console.log("pit:", pit)
+                    var te = document.getElementById(pit.pitId.toString())
+                    console.log("te: ", te)
+                    te.value = pit.stones.toString()
+                })
+
+            } else {
+                console.error("API Request Error");
+            }
+        };
+
+        xhr.send();
+    });
+
+    document.getElementById("loadGame").addEventListener("click", function() {
+        loadGameId = document.getElementById("loadGameById").value
+        const apiUrl = "http://localhost:8080/v1/api/games/" + loadGameId;
+        console.log("load url: ", apiUrl)
+        const xhr = new XMLHttpRequest();
+        xhr.open("GET", apiUrl, true);
+        xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+                // Request was successful
+                const response = JSON.parse(xhr.responseText);
+                console.log("API Response:", response);
+                gameId = response.gameId
+
+                document.getElementById("gameStatus").textContent = "Game Status: Game Loaded"
+                if(response.playerTurn == null)
+                    document.getElementById("turn").textContent = "Turn: To start, click on any below non larger pit for player one and any non larger top pit for player 2."
+
+                response.pits.forEach(pit =>{
+                    console.log("pit:", pit)
+                    var te = document.getElementById(pit.pitId.toString())
+                    console.log("te: ", te)
+                    te.value = pit.stones.toString()
+                })
+
+            } else {
+                console.error("API Request Error");
+            }
+        };
+
+        xhr.send();
+    });
+
+    function updateApi(id) {
+
+        const apiUrl = `http://localhost:8080/v1/api/games/${gameId}/pits/${id}`;
+        console.log("apiUrl: ", apiUrl)
+
+
+
+        fetch(apiUrl, {
+            method: "PUT"
+        })
+            .then(response => response.json()).then(data => {
+            console.log("data: ", data);
+                if(data.message == null){
+                    playerTurn = data.playerTurn
+                    gameStatus = data.gameStatus
+                    document.getElementById("turn").textContent = "Turn: " +  playerTurn
+                    document.getElementById("gameStatus").textContent = "Game Status: " + gameStatus
+
+                    data.pits.forEach(pit =>{
+                        console.log("pit:", pit)
+                        var te = document.getElementById(pit.pitId.toString())
+                        console.log("te: ", te)
+                        te.value = pit.stones.toString()
+                    })
+
+                    if(gameStatus === "COMPLETED") {
+                        document.getElementById("gameStatus").textContent = "Game Status: " + gameStatus + " and Winner is: " + data.winner
+                        document.getElementById("turn").textContent = ""
+                        alert("game completed and winner is " + data.winner);
+                    }
+                    if(gameStatus === "COMPLETED_DRAW") alert("game completed and it's draw");
+                }
+                else {
+                    alert(data.message)
+                }
+
+            })
+            .catch(error => {
+                console.error("Error ", error.value);
+                alert()
+            });
+    }
+</script>
+</body>
+</html>
