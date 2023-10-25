@@ -62,11 +62,6 @@ public class Game {
     this.numberOfPlayers = numOfPlayers;
   }
 
-  @Override
-  public String toString() {
-    return "Game{" + ", id=" + gameId + ", pits=" + pits + ", playerTurn=" + playerTurn + '}';
-  }
-
   public Pit getPit(int requestedPitId) {
     try {
       return this.pits.get(requestedPitId - 1);

@@ -39,7 +39,7 @@ public class GameController {
       description =
           "can be used to alter number of players that can be played at once. currently its support only two players."
               + "For any other valid value, it will be modified to two players until its extended.",
-      name = "numOfPlayers",
+      name = "numberOfPlayers",
       content = @Content(schema = @Schema(type = "integer")))
   @ApiResponses(
       value = {
@@ -69,15 +69,15 @@ public class GameController {
   @PostMapping
   public ResponseEntity<Game> createGame(
       @RequestParam(value = "stones", required = false) Integer stones,
-      @RequestParam(value = "numOfPlayers", required = false) Integer numOfPlayers) {
+      @RequestParam(value = "numberOfPlayers", required = false) Integer numberOfPlayers) {
     log.info("Invoking createGame() endpoint... ");
     int pitStones = stones != null ? stones : GameConstants.defaultPitStones;
-    int players = numOfPlayers != null ? numOfPlayers : GameConstants.defaultNumberOfPlayers;
+    int players = numberOfPlayers != null ? numberOfPlayers : GameConstants.defaultNumberOfPlayers;
 
     if (pitStones <= 0) throw new GameException("pit stones can't be zero or negative.");
     if (players <= 0 || players > 10)
       throw new GameException(
-          "number of players can't be zero or negative or can't be greater than 10");
+          "number of players can't be zero or negative and can't be greater than 10");
 
     int currentlySupportedNumberOfPlayers = GameConstants.defaultNumberOfPlayers;
 
@@ -175,11 +175,11 @@ public class GameController {
       throw new GameException(
           "Invalid pit selected. The pitId should be one of existing valid pit");
 
-    game = getSowingService(game).sow(game, pitId);
+    game = getSowingServiceByNumberOfPlayers(game).sow(game, pitId);
     return ResponseEntity.ok(gameService.updateGame(game));
   }
 
-  public SowingService getSowingService(Game game) {
+  public SowingService getSowingServiceByNumberOfPlayers(Game game) {
     if (game.getNumberOfPlayers() == 2) return new TwoPlayerSowingService();
     else throw new GameException("currently only two players are supported");
   }

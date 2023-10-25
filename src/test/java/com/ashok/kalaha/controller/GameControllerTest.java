@@ -109,6 +109,25 @@ public class GameControllerTest {
   }
 
   @Test
+  public void shouldNotAllowInvalidNumberOfPlayersToCreateGame() throws Exception {
+    var numberOfPlayers = -3;
+
+    mockMvc
+        .perform(post(GAME_URL + "?numberOfPlayers=" + numberOfPlayers))
+        .andExpect(status().is4xxClientError())
+        .andExpect(
+            errorResponse -> {
+              var errorDetails =
+                  objectMapper.readValue(
+                      errorResponse.getResponse().getContentAsString(), ErrorDetails.class);
+              assertEquals(
+                  "number of players can't be zero or negative and can't be greater than 10",
+                  errorDetails.getMessage());
+              assertEquals("GameException", errorDetails.getExceptionType());
+            });
+  }
+
+  @Test
   public void shouldLoadExistingGame() throws Exception {
     var mockedGame = buildAGame();
     when(gameServiceImpl.loadGame(DEFAULT_GAME_ID)).thenReturn(mockedGame);
